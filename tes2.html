@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AkunStore - Jual Beli Akun Otomatis</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS for animations and theme -->
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #111827; /* Dark background */
+            color: #e5e7eb;
+        }
+
+        /* Custom scrollbar for a modern look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4f46e5;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6366f1;
+        }
+
+        /* Page transition animations */
+        .page {
+            display: none; /* Hide all pages by default */
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        .page.active {
+            display: block; /* Show active page */
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Card hover effect */
+        .product-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.2);
+        }
+        
+        /* Loading Spinner */
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #4f46e5;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Custom Notification/Modal */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            z-index: 40;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            background-color: #1f2937;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            border: 1px solid #4f46e5;
+            box-shadow: 0 0 30px rgba(79, 70, 229, 0.3);
+            animation: slideUp 0.4s;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- === HEADER === -->
+    <header class="bg-gray-900/80 backdrop-blur-sm sticky top-0 z-30 shadow-lg shadow-indigo-500/10">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-2xl font-bold text-white cursor-pointer" onclick="showPage('home-page')">
+                <span class="text-indigo-400">Akun</span>Store
+            </div>
+            <div>
+                <a href="#" class="text-gray-300 hover:text-indigo-400 transition duration-300" onclick="showAdminLogin()">Panel Admin</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-8">
+        <!-- === LOADING OVERLAY === -->
+        <div id="loading-overlay" class="fixed inset-0 bg-gray-900/80 z-50 flex-col items-center justify-center" style="display: none;">
+            <div class="loader"></div>
+            <p id="loading-text" class="text-white mt-4 text-lg">Memproses...</p>
+        </div>
+
+        <!-- === CUSTOM NOTIFICATION MODAL === -->
+        <div id="notification-modal" class="modal-backdrop" style="display: none;">
+             <div id="notification-content" class="modal-content">
+                <!-- Content will be injected by JavaScript -->
+             </div>
+        </div>
+
+        <!-- === PAGE: HOME (CUSTOMER VIEW) === -->
+        <div id="home-page" class="page active">
+            <section class="text-center mb-12">
+                <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-2">Marketplace Akun Game Terpercaya</h1>
+                <p class="text-lg text-gray-400">Pengiriman Otomatis & Instan Setelah Pembayaran</p>
+            </section>
+            
+            <!-- Filter -->
+            <div class="mb-8 flex justify-center space-x-2 md:space-x-4">
+                <button onclick="filterProducts('all')" class="filter-btn bg-indigo-600 text-white px-4 py-2 rounded-full text-sm font-semibold">Semua</button>
+                <button onclick="filterProducts('Mobile Legends')" class="filter-btn bg-gray-700 hover:bg-indigo-600 transition text-white px-4 py-2 rounded-full text-sm font-semibold">Mobile Legends</button>
+                <button onclick="filterProducts('Valorant')" class="filter-btn bg-gray-700 hover:bg-indigo-600 transition text-white px-4 py-2 rounded-full text-sm font-semibold">Valorant</button>
+                <button onclick="filterProducts('Genshin Impact')" class="filter-btn bg-gray-700 hover:bg-indigo-600 transition text-white px-4 py-2 rounded-full text-sm font-semibold">Genshin Impact</button>
+            </div>
+
+            <div id="product-gallery" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+                <!-- Product cards will be injected here by JavaScript -->
+            </div>
+        </div>
+
+        <!-- === PAGE: PRODUCT DETAIL === -->
+        <div id="detail-page" class="page">
+            <!-- Details will be injected here by JavaScript -->
+        </div>
+
+        <!-- === PAGE: PAYMENT SIMULATION === -->
+        <div id="payment-page" class="page">
+            <!-- Payment details will be injected here by JavaScript -->
+        </div>
+
+        <!-- === PAGE: SUCCESS === -->
+        <div id="success-page" class="page">
+            <!-- Success message and account details will be injected here -->
+        </div>
+
+        <!-- === PAGE: ADMIN LOGIN === -->
+        <div id="admin-login-page" class="page">
+            <!-- Admin login handled by a prompt -->
+        </div>
+
+        <!-- === PAGE: ADMIN PANEL === -->
+        <div id="admin-panel-page" class="page">
+            <h2 class="text-3xl font-bold mb-6 text-white">Panel Admin</h2>
+            
+            <!-- Section to add new account -->
+            <div class="bg-gray-800 p-6 rounded-lg shadow-lg mb-8">
+                <h3 class="text-xl font-semibold mb-4 text-indigo-400">Tambah Stok Akun Baru</h3>
+                <form id="add-account-form" class="space-y-4">
+                    <select id="admin-category" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        <option value="">Pilih Kategori</option>
+                        <option value="Mobile Legends">Mobile Legends</option>
+                        <option value="Valorant">Valorant</option>
+                        <option value="Genshin Impact">Genshin Impact</option>
+                    </select>
+                    <input type="text" id="admin-name" placeholder="Nama/Judul Akun (e.g., Akun ML Sultan)" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    <textarea id="admin-description" placeholder="Deskripsi (e.g., Skin: 150, Rank: Mythic Glory)" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" required></textarea>
+                    <input type="number" id="admin-price" placeholder="Harga (e.g., 250000)" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    <input type="text" id="admin-image" placeholder="URL Gambar (e.g., https://.../image.png)" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    <input type="text" id="admin-username" placeholder="Detail Akun - Username/Email" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    <input type="text" id="admin-password" placeholder="Detail Akun - Password" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">Tambah Akun</button>
+                </form>
+            </div>
+
+            <!-- Section to view all accounts -->
+            <div>
+                <h3 class="text-xl font-semibold mb-4 text-indigo-400">Daftar Semua Akun</h3>
+                <div class="bg-gray-800 rounded-lg shadow-lg overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-700">
+                            <tr>
+                                <th class="p-4">ID</th>
+                                <th class="p-4">Kategori</th>
+                                <th class="p-4">Nama</th>
+                                <th class="p-4">Harga</th>
+                                <th class="p-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-account-list">
+                            <!-- Account list will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- === JAVASCRIPT LOGIC === -->
+    <script>
+        // --- MOCK DATABASE ---
+        // In a real application, this data would come from a server/database.
+        const db = {
+  accounts: []
+};
+
+async function fetchAccountsFromSheet() {
+  const url = "https://opensheet.elk.sh/1DqSx5JF_yzqlPdReMUCvfm2Hn-C8zP2c5g0cj4UWEJw/data";
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    db.accounts = data.map((item, index) => ({
+      id: index + 1,
+      category: item.kategori || "Tidak ada kategori",
+      name: item.nama || item.username || "Tanpa nama",
+      price: parseInt(item.harga || 0),
+      description: item.deskripsi || "",
+      image: item.gambar || "",
+      status: item.status || "tersedia",
+      details: {
+        username: item.username || "-",
+        password: item.password || "-"
+      }
+    }));
+
+    // Render setelah load data
+    renderProducts();
+    renderAdminPanel(); // kalau kamu ingin admin lihat juga
+
+  } catch (err) {
+    console.error("Gagal mengambil data dari Sheet:", err);
+  }
+}
+
+
+        // --- GLOBAL STATE ---
+        let currentAccount = null;
+        let currentFilter = 'all';
+
+        // --- PAGE ROUTING ---
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            document.getElementById(pageId).classList.add('active');
+            window.scrollTo(0, 0); // Scroll to top on page change
+        }
+
+        // --- UI RENDERING FUNCTIONS ---
+        function renderProducts() {
+            const gallery = document.getElementById('product-gallery');
+            gallery.innerHTML = '';
+            const availableAccounts = db.accounts.filter(acc => 
+                acc.status === 'Tersedia' && (currentFilter === 'all' || acc.category === currentFilter)
+            );
+
+            if (availableAccounts.length === 0) {
+                gallery.innerHTML = `<div class="col-span-full text-center text-gray-400 py-10">
+                    <p class="text-xl">Oops! Stok untuk kategori ini sedang kosong.</p>
+                    <p>Coba lihat kategori lainnya.</p>
+                </div>`;
+                return;
+            }
+
+            availableAccounts.forEach(acc => {
+                const card = document.createElement('div');
+                card.className = 'product-card bg-gray-800 rounded-lg overflow-hidden shadow-lg cursor-pointer transition-all duration-300';
+                card.onclick = () => showProductDetail(acc.id);
+                card.innerHTML = `
+                    <img src="${acc.image}" alt="${acc.name}" class="w-full h-48 object-cover">
+                    <div class="p-4">
+                        <span class="text-xs font-semibold text-indigo-400 bg-indigo-900/50 px-2 py-1 rounded-full">${acc.category}</span>
+                        <h3 class="text-lg font-bold mt-2 text-white truncate">${acc.name}</h3>
+                        <p class="text-xl font-semibold text-green-400 mt-2">Rp ${acc.price.toLocaleString('id-ID')}</p>
+                    </div>
+                `;
+                gallery.appendChild(card);
+            });
+        }
+
+        function showProductDetail(id) {
+            currentAccount = db.accounts.find(acc => acc.id === id);
+            if (!currentAccount) return;
+
+            const detailContainer = document.getElementById('detail-page');
+            detailContainer.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
+                    <div>
+                        <img src="${currentAccount.image}" alt="${currentAccount.name}" class="w-full rounded-lg shadow-2xl shadow-indigo-500/20">
+                    </div>
+                    <div>
+                        <button onclick="showPage('home-page')" class="text-indigo-400 hover:text-indigo-300 mb-4">&larr; Kembali ke Galeri</button>
+                        <span class="text-sm font-semibold text-indigo-400 bg-indigo-900/50 px-3 py-1 rounded-full">${currentAccount.category}</span>
+                        <h2 class="text-3xl md:text-4xl font-extrabold text-white mt-2 mb-3">${currentAccount.name}</h2>
+                        <p class="text-3xl font-bold text-green-400 mb-4">Rp ${currentAccount.price.toLocaleString('id-ID')}</p>
+                        <h4 class="text-lg font-semibold text-white mb-2">Deskripsi Akun:</h4>
+                        <p class="text-gray-300 leading-relaxed">${currentAccount.description}</p>
+                        <button onclick="startPayment()" class="w-full mt-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 text-lg">
+                            Beli Sekarang
+                        </button>
+                    </div>
+                </div>
+            `;
+            showPage('detail-page');
+        }
+        
+        function startPayment() {
+            const paymentContainer = document.getElementById('payment-page');
+            paymentContainer.innerHTML = `
+                <div class="max-w-2xl mx-auto bg-gray-800 p-8 rounded-lg shadow-lg">
+                    <h2 class="text-2xl font-bold text-center text-white mb-2">Konfirmasi Pembayaran</h2>
+                    <p class="text-center text-gray-400 mb-6">Anda akan membeli: <strong>${currentAccount.name}</strong></p>
+                    <div class="border-y border-gray-700 py-4 mb-6">
+                        <div class="flex justify-between text-lg">
+                            <span class="text-gray-300">Harga Akun:</span>
+                            <span class="font-semibold text-white">Rp ${currentAccount.price.toLocaleString('id-ID')}</span>
+                        </div>
+                        <div class="flex justify-between text-lg mt-2">
+                            <span class="text-gray-300">Biaya Admin:</span>
+                            <span class="font-semibold text-white">Rp 1.000</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-2xl font-bold">
+                        <span class="text-gray-200">Total Bayar:</span>
+                        <span class="text-green-400">Rp ${(currentAccount.price + 1000).toLocaleString('id-ID')}</span>
+                    </div>
+                    <div class="mt-8 text-center">
+                        <p class="mb-4">Silakan lakukan pembayaran dengan scan QRIS di bawah ini:</p>
+                        <img src="https://placehold.co/300x300/ffffff/111827?text=Contoh+QRIS" alt="QRIS Code" class="mx-auto rounded-lg shadow-md">
+                        <p class="text-sm text-gray-500 mt-4">(Ini adalah simulasi. Klik tombol di bawah untuk menyelesaikan.)</p>
+                    </div>
+                    <button onclick="processPayment()" class="w-full mt-8 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 text-lg">
+                        Saya Sudah Bayar
+                    </button>
+                    <button onclick="showProductDetail(currentAccount.id)" class="w-full mt-4 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                        Batal
+                    </button>
+                </div>
+            `;
+            showPage('payment-page');
+        }
+
+        function processPayment() {
+            const loadingOverlay = document.getElementById('loading-overlay');
+            const loadingText = document.getElementById('loading-text');
+            
+            loadingText.textContent = 'Memverifikasi pembayaran...';
+            loadingOverlay.style.display = 'flex';
+
+            // Simulate payment verification (2.5 seconds)
+            setTimeout(() => {
+                // Mark account as sold
+                currentAccount.status = 'Terjual';
+
+                // Simulate Telegram notification
+                simulateTelegramNotification(currentAccount);
+
+                loadingOverlay.style.display = 'none';
+
+                // Show success notification
+                showNotification(
+                    'Pembayaran Berhasil!',
+                    'Terima kasih! Data akun Anda akan ditampilkan sebentar lagi.',
+                    'success'
+                );
+                
+                // Show success page after another short delay
+                setTimeout(() => {
+                    closeNotification();
+                    showSuccessPage();
+                }, 2000);
+
+            }, 2500);
+        }
+
+        function showSuccessPage() {
+            const successContainer = document.getElementById('success-page');
+            successContainer.innerHTML = `
+                <div class="max-w-2xl mx-auto text-center">
+                    <svg class="w-24 h-24 text-green-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <h2 class="text-3xl font-bold text-white mb-2">Transaksi Sukses!</h2>
+                    <p class="text-gray-300 mb-8">Berikut adalah detail akun yang telah Anda beli. Harap simpan baik-baik dan segera amankan akunnya.</p>
+                    
+                    <div class="bg-gray-800 p-6 rounded-lg shadow-lg text-left space-y-4">
+                        <div>
+                            <label class="text-sm text-gray-400">Username/Email</label>
+                            <div class="flex items-center bg-gray-700 p-3 rounded-lg">
+                                <span id="acc-user" class="flex-grow text-white">${currentAccount.details.username}</span>
+                                <button onclick="copyToClipboard('acc-user')" class="ml-4 text-gray-400 hover:text-white">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM5 11a1 1 0 100 2h4a1 1 0 100-2H5z"></path><path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm2-1a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1V5a1 1 0 00-1-1H4z" clip-rule="evenodd"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-sm text-gray-400">Password</label>
+                             <div class="flex items-center bg-gray-700 p-3 rounded-lg">
+                                <span id="acc-pass" class="flex-grow text-white">${currentAccount.details.password}</span>
+                                <button onclick="copyToClipboard('acc-pass')" class="ml-4 text-gray-400 hover:text-white">
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM5 11a1 1 0 100 2h4a1 1 0 100-2H5z"></path><path fill-rule="evenodd" d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm2-1a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1V5a1 1 0 00-1-1H4z" clip-rule="evenodd"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="goHome()" class="mt-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+                        Kembali ke Halaman Utama
+                    </button>
+                </div>
+            `;
+            showPage('success-page');
+        }
+
+        // --- ADMIN FUNCTIONS ---
+        function showAdminLogin() {
+            const password = prompt("Masukkan password admin:", "");
+            if (password === "admin123") { // Simple password, change in real app
+                renderAdminPanel();
+                showPage('admin-panel-page');
+            } else if (password) {
+                showNotification('Akses Ditolak', 'Password yang Anda masukkan salah.', 'error');
+            }
+        }
+
+        function renderAdminPanel() {
+            const listContainer = document.getElementById('admin-account-list');
+            listContainer.innerHTML = '';
+            db.accounts.forEach(acc => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-700 hover:bg-gray-700/50';
+                row.innerHTML = `
+                    <td class="p-4">${acc.id}</td>
+                    <td class="p-4">${acc.category}</td>
+                    <td class="p-4">${acc.name}</td>
+                    <td class="p-4">Rp ${acc.price.toLocaleString('id-ID')}</td>
+                    <td class="p-4">
+                        <span class="px-3 py-1 rounded-full text-sm font-semibold ${acc.status === 'Tersedia' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}">
+                            ${acc.status}
+                        </span>
+                    </td>
+                `;
+                listContainer.appendChild(row);
+            });
+        }
+
+        document.getElementById('add-account-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const newAccount = {
+        id: db.accounts.length + 1,
+        category: document.getElementById('admin-category').value,
+        name: document.getElementById('admin-name').value,
+        price: parseInt(document.getElementById('admin-price').value),
+        description: document.getElementById('admin-description').value,
+        image: document.getElementById('admin-image').value,
+        status: 'Tersedia',
+        details: {
+            username: document.getElementById('admin-username').value,
+            password: document.getElementById('admin-password').value
+        }
+    };
+
+    try {
+        await fetch("https://script.google.com/macros/s/AKfycbwyyd7m0GJqVPADF5X1IJ0ZiEoRL2-YyDQkxzrOS95GlUZoKSEjdMZrp_IplrVb2J9p/exec", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    username: "akunml01",
+    kategori: "MLBB",
+    harga: "15000",
+    gambar: "https://via.placeholder.com/150",
+    status: "tersedia",
+    nama: "Akun ML Sultan",
+    deskripsi: "Akun elite, full skin",
+    password: "pass123"
+  })
+});
+
+
+        db.accounts.push(newAccount);
+        this.reset();
+        renderAdminPanel();
+        showNotification('Sukses!', '✅ Data berhasil dikirim ke Google Sheet & stok diperbarui.', 'success');
+
+    } catch (err) {
+        console.error(err);
+        showNotification('Gagal!', '❌ Gagal mengirim ke Spreadsheet: ' + err.message, 'error');
+    }
+});
+
+
+        // --- HELPER & UTILITY FUNCTIONS ---
+        function filterProducts(category) {
+            currentFilter = category;
+            // Update active button style
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if (btn.textContent.toLowerCase().includes(category.toLowerCase()) || (category === 'all' && btn.textContent === 'Semua')) {
+                    btn.classList.remove('bg-gray-700', 'hover:bg-indigo-600');
+                    btn.classList.add('bg-indigo-600');
+                } else {
+                    btn.classList.remove('bg-indigo-600');
+                    btn.classList.add('bg-gray-700', 'hover:bg-indigo-600');
+                }
+            });
+            renderProducts();
+        }
+
+        function simulateTelegramNotification(account) {
+            // In a real app, this would be an API call to a backend that sends the message.
+            console.log(`
+                --- NOTIFIKASI TELEGRAM (SIMULASI) ---
+                Pesanan Baru Masuk!
+                Akun: ${account.name} (${account.category})
+                Harga: Rp ${account.price.toLocaleString('id-ID')}
+                Status: TELAH DIBAYAR
+                ---------------------------------------
+            `);
+        }
+
+        function goHome() {
+            renderProducts();
+            showPage('home-page');
+        }
+
+        function copyToClipboard(elementId) {
+            const textToCopy = document.getElementById(elementId).innerText;
+            const tempInput = document.createElement('input');
+            tempInput.value = textToCopy;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            showNotification('Tersalin!', `Teks "${textToCopy}" berhasil disalin ke clipboard.`, 'info');
+        }
+        
+        function showNotification(title, message, type = 'info') {
+            const modal = document.getElementById('notification-modal');
+            const content = document.getElementById('notification-content');
+            
+            let icon = '';
+            let titleColor = '';
+            switch(type) {
+                case 'success':
+                    icon = `<svg class="w-16 h-16 text-green-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                    titleColor = 'text-green-400';
+                    break;
+                case 'error':
+                    icon = `<svg class="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                    titleColor = 'text-red-400';
+                    break;
+                default:
+                    icon = `<svg class="w-16 h-16 text-blue-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+                    titleColor = 'text-blue-400';
+            }
+
+            content.innerHTML = `
+                ${icon}
+                <h3 class="text-2xl font-bold ${titleColor} mb-2">${title}</h3>
+                <p class="text-gray-300 mb-6">${message}</p>
+                <button onclick="closeNotification()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition duration-300">Tutup</button>
+            `;
+            modal.style.display = 'flex';
+        }
+
+        function closeNotification() {
+            document.getElementById('notification-modal').style.display = 'none';
+        }
+
+        // --- INITIALIZATION ---
+        window.onload = () => {
+  const loadingOverlay = document.getElementById('loading-overlay');
+  const loadingText = document.getElementById('loading-text');
+  loadingText.textContent = 'Mengambil data dari Spreadsheet...';
+  loadingOverlay.style.display = 'flex';
+
+  fetchAccountsFromSheet().finally(() => {
+    loadingOverlay.style.display = 'none';
+  });
+};
+
+    </script>
+
+</body>
+</html>
